@@ -1,0 +1,7 @@
+node_modules/
+pnpm-lock.yaml
+*.log
+*.bak
+*.bak-*
+.DS_Store
+Thumbs.db

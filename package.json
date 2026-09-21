@@ -1,0 +1,54 @@
+{
+  "name": "dsh-desktop-restart",
+  "version": "0.1.0",
+  "description": "Desktop-only one-click DSH restart button in the conversation header: calls the DSH Desktop app's own restart path (dshDesktop.restartHarness()) to restart the harness in place — no shell, no lsof, no port polling, no page reload.",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "dsh-plugin",
+    "restart",
+    "desktop",
+    "cordis"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tecgic/dsh-desktop-restart.git"
+  },
+  "homepage": "https://github.com/tecgic/dsh-desktop-restart#readme",
+  "bugs": {
+    "url": "https://github.com/tecgic/dsh-desktop-restart/issues"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots"
+      ],
+      "platform": "web"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-client-ui-slots": "*",
+    "react": "^18.2.0"
+  },
+  "files": [
+    "lib/**/*.js",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "license": "MIT"
+}

@@ -1,0 +1,5 @@
+# dsh-desktop-restart bundle patch。
+# 纯 insert 行（无 config / 无表达式），因此也可被 market 热挂载。
+- insert:
+    - id: dsh-desktop-restart
+      name: dsh-desktop-restart
