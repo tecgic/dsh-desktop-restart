@@ -9,10 +9,14 @@ restarts in place.
 There is no shell script, no `lsof`, no port polling and no page reload: the packaged desktop app
 already owns a restart channel, and this plugin is a button in front of it.
 
+![The restart button in the DSH conversation header](assets/screenshot-1.png)
+
 ## Where the button is
 
 The session header's right-hand utilities row, next to the file actions (open location, export
 session): slot `conversation.session.header.utilities`.
+
+![Detail: the ↻ button between the file actions and the layout toggle, with its tooltip](assets/screenshot-2.png)
 
 | State | Look | Meaning |
 | --- | --- | --- |

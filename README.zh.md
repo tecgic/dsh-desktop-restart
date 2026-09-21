@@ -8,10 +8,14 @@
 没有 shell 脚本、没有 `lsof`、没有端口轮询、也不刷新页面：桌面端本来就有重启通道，
 这个插件只是在它前面放了一个按钮。
 
+![DSH 会话头部右上角的重启按钮](assets/screenshot-1.png)
+
 ## 按钮在哪
 
 会话头部的右上角工具区，紧邻文件操作（"打开所在文件夹"、导出会话）那一排：
 插槽 `conversation.session.header.utilities`。
+
+![细节：文件夹操作与布局切换之间的 ↻ 按钮，悬停显示 tooltip](assets/screenshot-2.png)
 
 | 状态 | 样子 | 含义 |
 | --- | --- | --- |
