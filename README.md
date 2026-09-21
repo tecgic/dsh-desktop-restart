@@ -1,91 +1,86 @@
 # dsh-desktop-restart
 
-[中文](README.zh.md) | English
+[English](README.en.md) | **中文**
 
-A one-click **restart** button in the DSH conversation header. It calls the DSH Desktop app's own
-restart path — the same one behind the `Harness → Restart Harness` menu item — so the harness
-restarts in place.
+会话头部右上角的**一键重启**按钮。它调用 DSH 桌面端自身的重启通道——也就是菜单里
+`Harness → Restart Harness` 走的那条路——让 harness 原地重启。
 
-There is no shell script, no `lsof`, no port polling and no page reload: the packaged desktop app
-already owns a restart channel, and this plugin is a button in front of it.
+没有 shell 脚本、没有 `lsof`、没有端口轮询、也不刷新页面：桌面端本来就有重启通道，
+这个插件只是在它前面放了一个按钮。
 
-![The restart button in the DSH conversation header](assets/screenshot-1.png)
+![DSH 会话头部右上角的重启按钮](assets/screenshot-1.png)
 
-## Where the button is
+## 按钮在哪
 
-The session header's right-hand utilities row, next to the file actions (open location, export
-session): slot `conversation.session.header.utilities`.
+会话头部的右上角工具区，紧邻文件操作（"打开所在文件夹"、导出会话）那一排：
+插槽 `conversation.session.header.utilities`。
 
-![Detail: the ↻ button between the file actions and the layout toggle, with its tooltip](assets/screenshot-2.png)
+![细节：文件夹操作与布局切换之间的 ↻ 按钮，悬停显示 tooltip](assets/screenshot-2.png)
 
-| State | Look | Meaning |
+| 状态 | 样子 | 含义 |
 | --- | --- | --- |
-| idle | ↻ arrow, hover background | click to restart |
-| busy | same arrow, spinning and dimmed | request sent, restart under way |
-| sent | arrow turns green | the app accepted the restart |
-| red | arrow turns red for 4 s, with a short label | no desktop bridge, or the bridge refused |
+| idle | ↻ 箭头，悬停有底色 | 点击即重启 |
+| busy | 同一箭头旋转、变暗 | 请求已发出，正在重启 |
+| sent | 箭头变绿 | 桌面端已接受重启 |
+| red | 箭头变红约 4 秒并显示短标签 | 没有桌面桥，或桥拒绝了请求 |
 
-## Requirements
+## 前提
 
-- **DSH Desktop** (the packaged Electron app). The button drives
-  `globalThis.dshDesktop.restartHarness()`, which only exists in the desktop window's renderer.
-- Opening the same web UI in an ordinary browser tab: the button renders, but clicking it reports
-  `Desktop only` instead of restarting anything. This is deliberate — the desktop app's
-  `harness:restart` IPC handler rejects every sender except its own main window, so there is no
-  browser-side path to take.
+- **DSH 桌面端**（打包的 Electron 应用）。按钮驱动的是
+  `globalThis.dshDesktop.restartHarness()`，它只存在于桌面窗口的渲染进程里。
+- 在普通浏览器标签页里打开同一地址：按钮会正常显示，但点击后只提示"需桌面窗口"，不会重启任何东西。
+  这是刻意的——桌面端的 `harness:restart` IPC 只接受它自己主窗口的请求，浏览器侧没有别的路可走。
 
-## Install
+## 安装
 
 ```sh
 dsh plugin --profile web add github:tecgic/dsh-desktop-restart
 ```
 
-Then restart once (menu `Harness → Restart Harness`, or quit and reopen) — the bundle list is read
-at boot, so a new plugin appears only after a restart.
+装完**重启一次**（菜单 `Harness → Restart Harness`，或退出重开）——bundle 列表在启动时读取，
+新插件只能在下一次启动生效。
 
-Local checkout:
+本地开发安装：
 
 ```sh
-dsh plugin --profile web add link:/absolute/path/to/dsh-desktop-restart
+dsh plugin --profile web add link:/绝对路径/dsh-desktop-restart
 ```
 
-## How it works
+## 工作原理
 
-- **Host half** (`lib/index.js`): an empty `apply()`. It exists only so the Loader has a row to
-  load; the browser half ships through `exports["./client"]` and the `dsh.client` declaration.
-- **Client half** (`lib/client.js`): a hand-written client module
-  (`window.__ModuleLoader__.load({ id, factory })`, no build step) that registers one component
-  into the `conversation.session.header.utilities` slot and, on click, calls
-  `globalThis.dshDesktop.restartHarness()`.
-- `cordis.patch.yml` is a plain `insert` row, so the bundle is also hot-mountable by the market.
+- **宿主半体**（`lib/index.js`）：空的 `apply()`。它只是让 Loader 有一个可加载的行；
+  浏览器半体通过 `package.json` 的 `exports["./client"]` 与 `dsh.client` 声明被发现并注入页面。
+- **浏览器半体**（`lib/client.js`）：手写的客户端模块
+  （`window.__ModuleLoader__.load({ id, factory })`，无需构建步骤），把组件注册进
+  `conversation.session.header.utilities` 插槽，点击时调用
+  `globalThis.dshDesktop.restartHarness()`。
+- `cordis.patch.yml` 是纯 `insert` 行，所以这个 bundle 也能被市场热挂载。
 
-Because nothing runs on the host side, the plugin needs no RPC surface, no routes and no
-permissions, and it installs from the git source with no build step or build approval.
+因为宿主侧不做任何事，插件不需要 RPC 接口、不需要路由、不需要权限，从 git 源码安装也没有构建步骤、
+不需要构建授权。
 
-## How it differs from other restart plugins
+## 与其它重启插件的区别
 
-Most restart plugins run the restart from the host: they register an HTTP route, find the listening
-PID, terminate it, respawn the same command line from a detached shell helper, then poll the port
-until the server answers and reload the page. That approach also works under plain `dsh web`.
+大多数重启插件从宿主侧下手：注册一个 HTTP 路由，找出监听端口的 PID，`SIGTERM` 掉，
+再用分离的 shell helper 按同一命令行拉起，然后轮询端口直到服务恢复并刷新页面。
+那种做法在纯 `dsh web`（命令行启动）下也能用。
 
-This plugin does none of that. It hands the request to the desktop app and lets the app restart its
-own harness child, which means:
+这个插件两样都不做：它把请求交给桌面端，由桌面端重启自己的 harness 子进程。结果是：
 
-- no external commands (`lsof`, `kill`, a login shell) and no platform-specific process lookup;
-- no detached second process and no chance of two harnesses racing for the same port;
-- no page reload — the app reloads the window itself when the new harness is up;
-- and, as the trade-off, **no plain-browser support**: outside the desktop window the bridge is
-  absent, and the button says so.
+- 不依赖任何外部命令（`lsof`、`kill`、登录 shell），也没有平台相关的进程查找；
+- 不产生分离的第二个进程，不存在两个 harness 抢同一端口的情况；
+- 不刷新页面——新 harness 起来后由桌面端自己重载窗口；
+- 代价是**不支持普通浏览器**：桌面窗口之外没有这个桥，按钮会如实提示。
 
-## Uninstall
+## 卸载
 
 ```sh
 dsh plugin --profile web remove dsh-desktop-restart
 ```
 
-or delete the `dsh-desktop-restart` entry from `dsh.profile.bundles` in the profile's
-`package.json`, reinstall, and restart once.
+或者从 profile 的 `package.json` 里删掉 `dsh.profile.bundles` 中的 `dsh-desktop-restart`，
+重跑一次安装，再重启一次。
 
-## License
+## 许可证
 
 MIT
